@@ -28,7 +28,7 @@ def test():
         func = func[1]
         function_name, lb, up, dim = Benchmarks.get_function_details(func.__name__)
         start_time = time()
-        optimizer = AntLionOptimizer(n=30, dimension=dim, c=lb, d=up, fitness_function=func, max_iter=500)
+        optimizer = AntLionOptimizer(n=30, dimension=dim, c=lb, d=up, fitness_function=func, max_iter=1000)
         best_solution, best_score = optimizer.optimize()
         time_s = time() - start_time
         print(f'function_name = {function_name}\n'

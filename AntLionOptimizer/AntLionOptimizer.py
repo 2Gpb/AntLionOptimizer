@@ -64,10 +64,11 @@ class AntLionOptimizer:
             x_random_walk[i] = x_random_walk[i - 1] + (2 * rand - 1)
         return x_random_walk
 
-    def __normalize_walk(self, walk, min_values, max_values, dim, iteration):
+    @staticmethod
+    def __normalize_walk(walk, min_values, max_values, dim, iteration):
         walk_min, walk_max = min(walk), max(walk)
-        normalized_walk = ((walk[iteration] - walk_min) * (self.__d - min_values[dim]) /
-                           (max_values[dim] - walk_min) + self.__c)
+        normalized_walk = ((walk[iteration] - walk_min) * (max_values[dim] - min_values[dim]) /
+                           (walk_max - walk_min) + min_values[dim])
         return normalized_walk
 
     @staticmethod
