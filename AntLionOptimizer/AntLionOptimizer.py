@@ -39,16 +39,16 @@ class AntLionOptimizer:
         if current_iter > 0.10 * self.__max_iter:
             w_exploration = 2
             i_ratio = (10 ** w_exploration) * (current_iter / self.__max_iter)
-        elif current_iter > 0.50 * self.__max_iter:
+        if current_iter > 0.50 * self.__max_iter:
             w_exploration = 3
             i_ratio = (10 ** w_exploration) * (current_iter / self.__max_iter)
-        elif current_iter > 0.75 * self.__max_iter:
+        if current_iter > 0.75 * self.__max_iter:
             w_exploration = 4
             i_ratio = (10 ** w_exploration) * (current_iter / self.__max_iter)
-        elif current_iter > 0.90 * self.__max_iter:
+        if current_iter > 0.90 * self.__max_iter:
             w_exploration = 5
             i_ratio = (10 ** w_exploration) * (current_iter / self.__max_iter)
-        elif current_iter > 0.95 * self.__max_iter:
+        if current_iter > 0.95 * self.__max_iter:
             w_exploration = 6
             i_ratio = (10 ** w_exploration) * (current_iter / self.__max_iter)
         c = self.__c / i_ratio
@@ -119,6 +119,6 @@ class AntLionOptimizer:
                 ants[i, -1] = self.__fitness_function(ants[i, :-1])
                 ant_lions[index] = self.__replace_ant_lion_if_fitter(ants[i], ant_lion)
             self.__update_elite_if_fitter(ant_lions)
-            # print(f"Iteration {iteration + 1}, Elite fitness: {self.__elite[-1]}")
+            print(f"Iteration {iteration + 1}, Elite fitness: {self.__elite[-1]}")
         # print("Best Solution:", np.round(self.__elite[:-1], 5), "fitness:", round(self.__elite[-1], 5))
-        return np.round(self.__elite[:-1], 5), round(self.__elite[-1], 5)
+        return self.__elite[:-1], 5, self.__elite[-1]
