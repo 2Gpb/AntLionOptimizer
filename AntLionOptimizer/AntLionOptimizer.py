@@ -1,4 +1,3 @@
-import random
 from Agent import *
 
 
@@ -20,22 +19,19 @@ class AntLionOptimizer:
             self.__agents.append(agent)
 
     def __initialize_ant_lions(self):
-        population = np.zeros((self.__n, self.__dimension + 1))
-        for i in range(self.__n):
-            for j in range(self.__dimension):
-                population[i, j] = random.uniform(self.__c, self.__d)
-            population[i, -1] = self.__fitness_function(population[i, :-1])
+        coordinates = np.random.uniform(self.__c, self.__d, (self.__n, self.__dimension))
+        fitness_values = np.apply_along_axis(self.__fitness_function, 1, coordinates)
+        population = np.hstack((coordinates, fitness_values.reshape(-1, 1)))
         return population
 
     @staticmethod
     def __find_best_ant_lion(population):
-        best_agent = population[population[:, -1].argsort()][0, :]
+        best_agent = population[np.argmin(population[:, -1])]
         return best_agent
 
     @staticmethod
     def __select_ant_lion_using_roulette(fitness):
-        fitness_sum = np.abs(fitness).sum()
-        selection_probabilities = np.abs(fitness) / fitness_sum
+        selection_probabilities = np.abs(fitness) / np.abs(fitness).sum()
         return np.random.choice(len(fitness), p=selection_probabilities)
 
     def __get_i_ratio(self, current_iter):
@@ -53,8 +49,8 @@ class AntLionOptimizer:
         return i_ratio
 
     def __update_bounds(self, ant_lion, i_ratio):
-        c = self.__c / i_ratio
-        d = self.__d / i_ratio
+        c = np.asarray(self.__c) / i_ratio
+        d = np.asarray(self.__d) / i_ratio
         min_values = ant_lion[:-1] + c
         max_values = ant_lion[:-1] + d
         return min_values, max_values
