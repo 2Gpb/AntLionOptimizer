@@ -80,12 +80,6 @@ class AntLionOptimizer:
         return walks
 
     @staticmethod
-    def __update_position(ant, x_random_walk, e_random_walk, min_value, max_value, dim):
-        ant[dim] = np.clip((x_random_walk + e_random_walk) / 2,
-                           min_value, max_value)
-        return ant
-
-    @staticmethod
     def __replace_ant_lion_if_fitter(ant, ant_lion):
         if ant[-1] < ant_lion[-1]:
             return ant
