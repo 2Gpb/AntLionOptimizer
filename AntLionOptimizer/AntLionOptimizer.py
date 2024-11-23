@@ -1,5 +1,5 @@
-import numpy as np
 import random
+from Agent import *
 
 
 class AntLionOptimizer:
@@ -11,14 +11,21 @@ class AntLionOptimizer:
         self.__fitness_function = fitness_function
         self.__max_iter = max_iter
         self.__elite = None
+        self.__agents = []
 
-    def __initialize_population(self):
+    def __initialize_ant_lions(self):
         population = np.zeros((self.__n, self.__dimension + 1))
         for i in range(self.__n):
             for j in range(self.__dimension):
                 population[i, j] = random.uniform(self.__c, self.__d)
             population[i, -1] = self.__fitness_function(population[i, :-1])
         return population
+
+    def __initialize_population(self):
+        for i in range(self.__n):
+            agent = Agent(self.__c, self.__d, self.__dimension, self.__fitness_function)
+            agent.fill_random()
+            self.__agents.append(agent)
 
     @staticmethod
     def __find_best_ant_lion(population):
@@ -72,12 +79,6 @@ class AntLionOptimizer:
         return normalized_walk
 
     @staticmethod
-    def __update_position(ant,  x_random_walk, e_random_walk, min_value, max_value, dim):
-        ant[dim] = np.clip((x_random_walk + e_random_walk) / 2,
-                           min_value, max_value)
-        return ant
-
-    @staticmethod
     def __replace_ant_lion_if_fitter(ant, ant_lion):
         if ant[-1] < ant_lion[-1]:
             return ant
@@ -92,13 +93,14 @@ class AntLionOptimizer:
             ant_lions[ant_lions[:, -1].argsort()][0, :] = self.__elite
 
     def optimize(self):
-        ants = self.__initialize_population()
-        ant_lions = self.__initialize_population()
+        self.__initialize_population()
+        ant_lions = self.__initialize_ant_lions()
 
         self.__elite = self.__find_best_ant_lion(ant_lions)
 
         for iteration in range(0, self.__max_iter):
             for i in range(self.__n):
+                agent = self.__agents[i]
                 index = self.__select_ant_lion_using_roulette(ant_lions[:, -1])
                 ant_lion = ant_lions[index]
 
@@ -113,12 +115,10 @@ class AntLionOptimizer:
                     elite_walk[iteration] = self.__normalize_walk(elite_walk, elite_min_values, elite_max_values,
                                                                   j, iteration)
 
-                    ants[i] = self.__update_position(ants[i], ant_walk[iteration], elite_walk[iteration],
-                                                     min_values[j], max_values[j], j)
+                    agent.update_position(ant_walk[iteration], elite_walk[iteration], min_values[j], max_values[j], j)
 
-                ants[i, -1] = self.__fitness_function(ants[i, :-1])
-                ant_lions[index] = self.__replace_ant_lion_if_fitter(ants[i], ant_lion)
+                agent.coordinates[-1] = self.__fitness_function(agent.coordinates[:-1])
+                ant_lions[index] = self.__replace_ant_lion_if_fitter(agent.coordinates, ant_lion)
             self.__update_elite_if_fitter(ant_lions)
             print(f"Iteration {iteration + 1}, Elite fitness: {self.__elite[-1]}")
-        # print("Best Solution:", np.round(self.__elite[:-1], 5), "fitness:", round(self.__elite[-1], 5))
-        return self.__elite[:-1], 5, self.__elite[-1]
+        return self.__elite[:-1], self.__elite[-1]
