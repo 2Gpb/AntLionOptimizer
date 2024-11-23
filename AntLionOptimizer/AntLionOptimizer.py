@@ -41,42 +41,49 @@ class AntLionOptimizer:
         selected_index = np.random.choice(len(fitness), p=selection_probabilities)
         return selected_index
 
-    def __update_bounds(self, ant_lion, current_iter):
+    def __get_i_ratio(self, current_iter):
         i_ratio = 1
         if current_iter > 0.10 * self.__max_iter:
-            w_exploration = 2
-            i_ratio = (10 ** w_exploration) * (current_iter / self.__max_iter)
+            i_ratio = 1 + (10 ** 2) * (current_iter / self.__max_iter)
         if current_iter > 0.50 * self.__max_iter:
-            w_exploration = 3
-            i_ratio = (10 ** w_exploration) * (current_iter / self.__max_iter)
+            i_ratio = 1 + (10 ** 3) * (current_iter / self.__max_iter)
         if current_iter > 0.75 * self.__max_iter:
-            w_exploration = 4
-            i_ratio = (10 ** w_exploration) * (current_iter / self.__max_iter)
+            i_ratio = 1 + (10 ** 4) * (current_iter / self.__max_iter)
         if current_iter > 0.90 * self.__max_iter:
-            w_exploration = 5
-            i_ratio = (10 ** w_exploration) * (current_iter / self.__max_iter)
+            i_ratio = 1 + (10 ** 5) * (current_iter / self.__max_iter)
         if current_iter > 0.95 * self.__max_iter:
-            w_exploration = 6
-            i_ratio = (10 ** w_exploration) * (current_iter / self.__max_iter)
+            i_ratio = 1 + (10 ** 6) * (current_iter / self.__max_iter)
+        return i_ratio
+
+    def __update_bounds(self, ant_lion, i_ratio):
         c = self.__c / i_ratio
         d = self.__d / i_ratio
         min_values = ant_lion[:-1] + c
         max_values = ant_lion[:-1] + d
         return min_values, max_values
 
-    def __create_random_walk(self):
-        x_random_walk = [0] * (self.__max_iter + 1)
-        for i in range(1, self.__max_iter + 1):
-            rand = random.choice([0, 1])
-            x_random_walk[i] = x_random_walk[i - 1] + (2 * rand - 1)
-        return x_random_walk
+    @staticmethod
+    def __normalize_walk(walk, min_value, max_value):
+        walk_min, walk_max = min(walk), max(walk)
+        normalized_walk = ((walk - walk_min) * (max_value - min_value) /
+                           (walk_max - walk_min) + min_value)
+        return normalized_walk
+
+    def __create_random_walks(self, i_ratio, ant_lion):
+        walks = np.zeros((self.__max_iter + 1, self.__dimension))
+        for i in range(0, self.__dimension):
+            random_steps = np.random.choice([1, -1], size=self.__max_iter + 1)
+            walk = np.cumsum(np.insert(random_steps, 0, 0))
+            minimum, maximum = self.__update_bounds(ant_lion, i_ratio)
+            norm_walk = self.__normalize_walk(walk, minimum[i], maximum[i])
+            walks[:, i] = norm_walk[1:]
+        return walks
 
     @staticmethod
-    def __normalize_walk(walk, min_values, max_values, dim, iteration):
-        walk_min, walk_max = min(walk), max(walk)
-        normalized_walk = ((walk[iteration] - walk_min) * (max_values[dim] - min_values[dim]) /
-                           (walk_max - walk_min) + min_values[dim])
-        return normalized_walk
+    def __update_position(ant, x_random_walk, e_random_walk, min_value, max_value, dim):
+        ant[dim] = np.clip((x_random_walk + e_random_walk) / 2,
+                           min_value, max_value)
+        return ant
 
     @staticmethod
     def __replace_ant_lion_if_fitter(ant, ant_lion):
@@ -95,30 +102,21 @@ class AntLionOptimizer:
     def optimize(self):
         self.__initialize_population()
         ant_lions = self.__initialize_ant_lions()
-
         self.__elite = self.__find_best_ant_lion(ant_lions)
 
         for iteration in range(0, self.__max_iter):
-            for i in range(self.__n):
+            i_ratio = self.__get_i_ratio(iteration)
+            roulette_index = self.__select_ant_lion_using_roulette(ant_lions[:, -1])
+
+            for i in range(0, self.__n):
                 agent = self.__agents[i]
-                index = self.__select_ant_lion_using_roulette(ant_lions[:, -1])
-                ant_lion = ant_lions[index]
+                ant_walks = self.__create_random_walks(i_ratio, ant_lions[roulette_index])
+                elite_walks = self.__create_random_walks(i_ratio, self.__elite)
 
-                min_values, max_values = self.__update_bounds(ant_lion, iteration)
-                elite_min_values, elite_max_values = self.__update_bounds(self.__elite, iteration)
+                agent.update_position(ant_walks[iteration, :], elite_walks[iteration, :])
+                ant_lions[roulette_index] = self.__replace_ant_lion_if_fitter(agent.coordinates,
+                                                                              ant_lions[roulette_index])
 
-                for j in range(0, self.__dimension):
-                    ant_walk = self.__create_random_walk()
-                    elite_walk = self.__create_random_walk()
-
-                    ant_walk[iteration] = self.__normalize_walk(ant_walk, min_values, max_values, j, iteration)
-                    elite_walk[iteration] = self.__normalize_walk(elite_walk, elite_min_values, elite_max_values,
-                                                                  j, iteration)
-
-                    agent.update_position(ant_walk[iteration], elite_walk[iteration], min_values[j], max_values[j], j)
-
-                agent.coordinates[-1] = self.__fitness_function(agent.coordinates[:-1])
-                ant_lions[index] = self.__replace_ant_lion_if_fitter(agent.coordinates, ant_lion)
             self.__update_elite_if_fitter(ant_lions)
             print(f"Iteration {iteration + 1}, Elite fitness: {self.__elite[-1]}")
         return self.__elite[:-1], self.__elite[-1]

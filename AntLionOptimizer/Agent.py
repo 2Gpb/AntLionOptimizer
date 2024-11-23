@@ -15,5 +15,10 @@ class Agent:
         self.coordinates = np.append(coordinates, fitness_value)
         return self.coordinates
 
-    def update_position(self, x_random_walk, e_random_walk, min_value, max_value, dim):
-        self.coordinates[dim] = np.clip((x_random_walk + e_random_walk) / 2, min_value, max_value)
+    def update_position(self, x_random_walks, e_random_walks):
+        self.coordinates = np.clip((x_random_walks + e_random_walks) / 2, self.__c, self.__d)
+        self.__update_fitness(self.coordinates)
+
+    def __update_fitness(self, coordinates):
+        fitness_value = self.__fitness_function(coordinates)
+        self.coordinates = np.append(coordinates, fitness_value)
