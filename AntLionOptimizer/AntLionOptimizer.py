@@ -34,12 +34,9 @@ class AntLionOptimizer:
 
     @staticmethod
     def __select_ant_lion_using_roulette(fitness):
-        fitness_sum = 0
-        for i in range(0, len(fitness)):
-            fitness_sum += abs(fitness[i])
-        selection_probabilities = abs(fitness) / fitness_sum
-        selected_index = np.random.choice(len(fitness), p=selection_probabilities)
-        return selected_index
+        fitness_sum = np.abs(fitness).sum()
+        selection_probabilities = np.abs(fitness) / fitness_sum
+        return np.random.choice(len(fitness), p=selection_probabilities)
 
     def __get_i_ratio(self, current_iter):
         i_ratio = 1
@@ -70,13 +67,11 @@ class AntLionOptimizer:
         return normalized_walk
 
     def __create_random_walks(self, i_ratio, ant_lion):
-        walks = np.zeros((self.__max_iter + 1, self.__dimension))
-        for i in range(0, self.__dimension):
-            random_steps = np.random.choice([1, -1], size=self.__max_iter + 1)
-            walk = np.cumsum(np.insert(random_steps, 0, 0))
-            minimum, maximum = self.__update_bounds(ant_lion, i_ratio)
-            norm_walk = self.__normalize_walk(walk, minimum[i], maximum[i])
-            walks[:, i] = norm_walk[1:]
+        random_steps = np.random.choice([1, -1], size=(self.__max_iter + 1, self.__dimension))
+        walks = np.cumsum(random_steps, axis=0)
+        min_values, max_values = self.__update_bounds(ant_lion, i_ratio)
+        walks = (walks - walks.min(axis=0)) / (walks.max(axis=0) - walks.min(axis=0))
+        walks = walks * (max_values - min_values) + min_values
         return walks
 
     @staticmethod
@@ -87,11 +82,11 @@ class AntLionOptimizer:
             return ant_lion
 
     def __update_elite_if_fitter(self, ant_lions):
-        best_ant_lion = ant_lions[ant_lions[:, -1].argsort()][0, :]
+        best_ant_lion = ant_lions[np.argmin(ant_lions[:, -1])]
         if best_ant_lion[-1] < self.__elite[-1]:
             self.__elite = best_ant_lion
         else:
-            ant_lions[ant_lions[:, -1].argsort()][0, :] = self.__elite
+            ant_lions[np.argmin(ant_lions[:, -1])] = self.__elite
 
     def optimize(self):
         self.__initialize_population()
@@ -113,5 +108,6 @@ class AntLionOptimizer:
                                                                               ant_lions[roulette_index])
 
             self.__update_elite_if_fitter(ant_lions)
-            print(f"Iteration {iteration + 1}, Elite fitness: {self.__elite[-1]}")
+            if iteration % 50 == 0:
+                print(f"Iteration {iteration}, Elite fitness: {self.__elite[-1]}")
         return self.__elite[:-1], self.__elite[-1]
