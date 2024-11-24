@@ -1,14 +1,17 @@
-# AntLionOptimizer
+# Ant Lion Optimizer (ALO)
+
+This project contains an implementation of the Ant Lion Optimizer (ALO), inspired by the hunting mechanism of antlions. ALO is a metaheuristic optimization method that mimics the interaction between ants and antlions in nature to solve optimization problems.
+
+## Main components:
+- **Agent Class** - Implements the properties and methods associated with the behavior of individual agents (ants).
+
+- **Algorithm Class** - Implements the core mechanics of the Ant Lion Optimizer.
+
+- **Benchmark File** - Provides a set of standard test functions to evaluate the algorithm's performance.
+
 
 ## Getting Started 
 To run this project, you need to install the required dependencies. You can install them using pip: 
-1. Install **numpy**:
 ```
-pip install numpy
+pip install -r requirements.txt
 ```
-2. Install **pyMetaheuristic**:
-```
-pip install pyMetaheuristic
-```
-
-Once the dependencies are installed, you can use the Ant Lion Optimizer for optimization tasks.
