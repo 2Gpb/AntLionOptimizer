@@ -26,17 +26,16 @@ def test():
 
     for func in functions:
         func = func[1]
-        function_name, lb, up, dim = Benchmarks.get_function_details(func.__name__)
+        function_name, lb, up, dim = Benchmarks.get_function_param(func.__name__)
         start_time = time()
         optimizer = AntLionOptimizer(n=30, dimension=dim, c=lb, d=up, fitness_function=func, max_iter=1000)
         best_solution, best_score = optimizer.optimize()
         time_s = time() - start_time
         print(f'function_name = {function_name}\n'
-              f'best_score = {best_score}\n'
               f'time_s = {time_s}\n'
+              f'best_score = {best_score}\n'
               f'best_solution = {best_solution}')
-        print("__________________________________________________________________________"
-              "______________________________________")
+        print("__________________________________________________________________________")
 
 
 def main():

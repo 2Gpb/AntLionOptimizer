@@ -11,8 +11,7 @@ class Agent:
 
     def fill_random(self):
         coordinates = np.random.uniform(self.__c, self.__d, self.__dim)
-        fitness_value = self.__fitness_function(coordinates)
-        self.coordinates = np.append(coordinates, fitness_value)
+        self.__update_fitness(coordinates)
         return self.coordinates
 
     def update_position(self, x_random_walks, e_random_walks):

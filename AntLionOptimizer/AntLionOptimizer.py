@@ -55,19 +55,12 @@ class AntLionOptimizer:
         max_values = ant_lion[:-1] + d
         return min_values, max_values
 
-    @staticmethod
-    def __normalize_walk(walk, min_value, max_value):
-        walk_min, walk_max = min(walk), max(walk)
-        normalized_walk = ((walk - walk_min) * (max_value - min_value) /
-                           (walk_max - walk_min) + min_value)
-        return normalized_walk
-
     def __create_random_walks(self, i_ratio, ant_lion):
         random_steps = np.random.choice([1, -1], size=(self.__max_iter + 1, self.__dimension))
         walks = np.cumsum(random_steps, axis=0)
         min_values, max_values = self.__update_bounds(ant_lion, i_ratio)
-        walks = (walks - walks.min(axis=0)) / (walks.max(axis=0) - walks.min(axis=0))
-        walks = walks * (max_values - min_values) + min_values
+        walks = (((walks - walks.min(axis=0)) * (max_values - min_values)) /
+                 (walks.max(axis=0) - walks.min(axis=0)) + min_values)
         return walks
 
     @staticmethod
@@ -104,6 +97,4 @@ class AntLionOptimizer:
                                                                               ant_lions[roulette_index])
 
             self.__update_elite_if_fitter(ant_lions)
-            if iteration % 50 == 0:
-                print(f"Iteration {iteration}, Elite fitness: {self.__elite[-1]}")
         return self.__elite[:-1], self.__elite[-1]
