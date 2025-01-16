@@ -1,21 +1,7 @@
 from AntLionOptimizer import *
-from Benchmarks import *
 import Benchmarks
 import inspect
 from time import time
-from pyMetaheuristic.utils import graphs
-
-
-def open_graphs():
-    plot_parameters = {
-        'min_values': (-5, -5),
-        'max_values': (5, 5),
-        'step': (0.1, 0.1),
-        'solution': [],
-        'proj_view': '3D',
-        'view': 'notebook'
-    }
-    graphs.plot_single_function(target_function=f1, **plot_parameters)
 
 
 def test():
@@ -39,7 +25,6 @@ def test():
 
 
 def main():
-    # open_graphs()
     test()
 
 
